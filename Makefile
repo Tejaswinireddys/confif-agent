@@ -1,7 +1,7 @@
 PY  = backend/venv/bin/python
 PIP = backend/venv/bin/pip
 
-.PHONY: install backend frontend run test sample validate help
+.PHONY: install backend frontend run test sample validate creation-gate help
 
 help:
 	@echo "Targets:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make test           Run backend (pytest) and frontend tests"
 	@echo "  make sample         Run the synthetic end-to-end reconcile"
 	@echo "  make validate FILE=path/to/contract.yaml   Validate a contract YAML"
+	@echo "  make creation-gate  Run CI creation CLI gate (op_id flow)"
 
 install:
 	python3 -m venv backend/venv
@@ -38,3 +39,6 @@ sample:
 validate:
 	@test -n "$(FILE)" || (echo "usage: make validate FILE=path/to/contract.yaml" && exit 2)
 	$(PY) backend/cli.py validate-contract --file $(FILE)
+
+creation-gate:
+	backend/scripts/ci_creation_gate.sh

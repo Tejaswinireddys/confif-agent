@@ -10,3 +10,4 @@ __pycache__/
 # Runtime data (registry + audit snapshots)
 contracts/
 snapshots/
+.ci-creation-work/
