@@ -1,0 +1,93 @@
+# RELATIONAL TEMPLATE
+# -------------------
+# The full-featured template: multiple sections with foreign-key relationships
+# and companion requirements, plus custom decision thresholds. Use this when
+# rows in one section reference rows in another (e.g. children point at parents)
+# or require a matching row elsewhere.
+#
+# Replace every <PLACEHOLDER>. Validate with:
+#   python backend/cli.py validate-contract --file <thisfile>
+
+contract_name: <your_contract_name>
+version: "1.0.0"
+
+file_format:
+  file_pattern: "*.cfg"
+  delimiter: ","
+  has_section_markers: true
+  section_start_prefix: "start_"
+  section_end_prefix: "end_"
+  header_position: "before_start"
+  leading_empty_field: true
+
+sections:
+  # ---- Parent section (referenced by others) ----
+  - name: <parent_section>
+    description: >-
+      Top-level container. Other sections reference rows here.
+    id_column: <parent_id>
+    id_naming_rule: sequential_int
+    columns:
+      - name: <parent_id>
+        is_id: true
+        required: true
+        data_type: int
+      - name: <parent_field>
+        required: true
+        data_type: string
+
+  # ---- Child section (references the parent) ----
+  - name: <child_section>
+    description: >-
+      Belongs to exactly one <parent_section> and must expose at least one
+      <grandchild_section> row.
+    id_column: <child_id>
+    id_naming_rule: sequential_int
+    columns:
+      - name: <child_id>
+        is_id: true
+        required: true
+        data_type: int
+      - name: <parent_ref>          # the foreign-key column
+        required: true
+        data_type: int
+    foreign_keys:
+      # Every <parent_ref> value must exist as a <parent_id> in <parent_section>.
+      - column: <parent_ref>
+        references_section: <parent_section>
+        references_column: <parent_id>
+    companions:
+      # Every <child_section> row must have a matching <grandchild_section> row
+      # whose <child_ref> equals this row's <child_ref> value.
+      - requires_section: <grandchild_section>
+        match_on: <child_ref>
+
+  # ---- Grandchild section (references the child) ----
+  - name: <grandchild_section>
+    description: >-
+      Belongs to exactly one <child_section>.
+    id_column: <grandchild_id>
+    id_naming_rule: sequential_int
+    columns:
+      - name: <grandchild_id>
+        is_id: true
+        required: true
+        data_type: int
+      - name: <child_ref>           # foreign-key column AND companion match column
+        required: true
+        data_type: int
+      - name: <ip_field>
+        data_type: ip
+      - name: <port_field>
+        data_type: port
+    foreign_keys:
+      - column: <child_ref>
+        references_section: <child_section>
+        references_column: <child_id>
+
+# Custom decision thresholds (omit this block to use the defaults).
+thresholds:
+  auto_apply_max_blast_radius: 2        # auto-apply only when <= this many dependents
+  suggest_min_blast_radius: 3           # above this, declared changes drop to SUGGEST
+  block_undeclared_modify_blast_radius: 2  # undeclared modify above this is BLOCKED
+  allow_auto_apply: true                # set false to cap every decision at SUGGEST

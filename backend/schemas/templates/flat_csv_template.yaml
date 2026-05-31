@@ -1,0 +1,42 @@
+# FLAT CSV TEMPLATE
+# ----------------
+# Use this when your config is a single flat table with a header row and no
+# section markers (e.g. one CSV file = one table). The section name is taken
+# from the file stem at parse time (e.g. "devices.csv" -> section "devices").
+#
+# Replace every <PLACEHOLDER> with your own names. Delete the comments you don't
+# need. Validate with:  python backend/cli.py validate-contract --file <thisfile>
+
+contract_name: <your_contract_name>
+version: "1.0.0"
+
+file_format:
+  file_pattern: "*.csv"
+  delimiter: ","
+  has_section_markers: false      # flat: the whole file is one table
+  header_position: "first_row"    # first line is the header
+  leading_empty_field: false      # set true if every row starts with the delimiter
+
+sections:
+  # For a flat file you typically declare ONE section. Its name should match the
+  # file stem you will upload (e.g. devices.csv -> name: devices).
+  - name: <section_name>
+    description: >-
+      Plain-English meaning of this table. This helps the AI map ticket language
+      onto the section. Be specific about what one row represents.
+    id_column: <id_column>        # the column that uniquely identifies a row
+    id_naming_rule: sequential_int
+    columns:
+      - name: <id_column>
+        is_id: true
+        required: true
+        data_type: int
+      - name: <column_a>
+        required: true
+        data_type: string
+      - name: <column_b>
+        data_type: enum
+        enum_values: ["<value_1>", "<value_2>"]
+
+# No thresholds block: defaults are used (auto_apply_max_blast_radius=2, etc.).
+# Add a thresholds block to override them (see relational_template.yaml).

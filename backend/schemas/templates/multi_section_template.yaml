@@ -1,0 +1,49 @@
+# MULTI-SECTION TEMPLATE
+# ----------------------
+# Use this when one config file contains several tables delimited by start/end
+# markers, with a header line just before each start marker. There are no
+# relationships between the sections in this template (see relational_template
+# for foreign keys and companions).
+#
+# Replace every <PLACEHOLDER>. Validate with:
+#   python backend/cli.py validate-contract --file <thisfile>
+
+contract_name: <your_contract_name>
+version: "1.0.0"
+
+file_format:
+  file_pattern: "*.cfg"
+  delimiter: ","
+  has_section_markers: true
+  section_start_prefix: "start_"  # a line "start_<section>" opens a block
+  section_end_prefix: "end_"      # a line "end_<section>" closes it
+  header_position: "before_start" # header is the line directly above start_*
+  leading_empty_field: true       # each row begins with a leading delimiter
+
+sections:
+  - name: <section_one>
+    description: >-
+      What one row in this section represents.
+    id_column: <section_one_id>
+    id_naming_rule: sequential_int
+    columns:
+      - name: <section_one_id>
+        is_id: true
+        required: true
+        data_type: int
+      - name: <field_a>
+        required: true
+        data_type: string
+
+  - name: <section_two>
+    description: >-
+      What one row in this section represents.
+    id_column: <section_two_id>
+    id_naming_rule: sequential_int
+    columns:
+      - name: <section_two_id>
+        is_id: true
+        required: true
+        data_type: int
+      - name: <field_b>
+        data_type: bool

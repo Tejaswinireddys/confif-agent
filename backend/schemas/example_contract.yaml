@@ -1,0 +1,94 @@
+# Example generic schema contract.
+#
+# Neutral, customer-agnostic names are used on purpose. The reconciliation
+# engine reads everything below at runtime; nothing here is special-cased in
+# engine code.
+contract_name: example_generic_network
+version: "1.0.0"
+
+file_format:
+  file_pattern: "*.cfg"
+  delimiter: ","
+  has_section_markers: true
+  section_start_prefix: "start_"
+  section_end_prefix: "end_"
+  header_position: "before_start"
+  leading_empty_field: true
+
+sections:
+  - name: clusters
+    description: >-
+      Logical groupings of nodes. A cluster is the top-level container and is
+      referenced by the nodes that belong to it.
+    id_column: cluster_id
+    id_naming_rule: sequential_int
+    columns:
+      - name: cluster_id
+        is_id: true
+        required: true
+        data_type: int
+      - name: cluster_name
+        required: true
+        data_type: string
+      - name: tier
+        data_type: enum
+        enum_values: ["gold", "silver", "bronze"]
+
+  - name: nodes
+    description: >-
+      Individual machines that live inside a cluster. Each node belongs to
+      exactly one cluster and is expected to expose at least one interface.
+    id_column: node_id
+    id_naming_rule: sequential_int
+    columns:
+      - name: node_id
+        is_id: true
+        required: true
+        data_type: int
+      - name: hostname
+        required: true
+        data_type: string
+      - name: cluster_ref
+        required: true
+        data_type: int
+      - name: enabled
+        data_type: bool
+    foreign_keys:
+      - column: cluster_ref
+        references_section: clusters
+        references_column: cluster_id
+    companions:
+      # Every node must be accompanied by at least one interface that points
+      # back at it via node_id.
+      - requires_section: interfaces
+        match_on: node_id
+
+  - name: interfaces
+    description: >-
+      Network interfaces attached to a node. Each interface has an IP address
+      and a listening port and belongs to exactly one node.
+    id_column: interface_id
+    id_naming_rule: sequential_int
+    columns:
+      - name: interface_id
+        is_id: true
+        required: true
+        data_type: int
+      - name: node_id
+        required: true
+        data_type: int
+      - name: ip_address
+        required: true
+        data_type: ip
+      - name: listen_port
+        data_type: port
+    foreign_keys:
+      - column: node_id
+        references_section: nodes
+        references_column: node_id
+
+thresholds:
+  auto_apply_max_blast_radius: 3
+  suggest_min_blast_radius: 4
+  block_undeclared_modify_blast_radius: 3
+  allow_auto_apply: true
